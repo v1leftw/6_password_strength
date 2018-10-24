@@ -1,6 +1,7 @@
 import re
 from string import punctuation
 from urllib import request
+from urllib import error
 import getpass
 
 '''
@@ -13,9 +14,9 @@ PROHIBITION_LIST = "https://bit.ly/2AoqJzK"
 
 def get_data_from_list():
     try:
-        with request.urlopen(PROHIBITION_LIST, timeout=10000) as pw_list:
+        with request.urlopen(PROHIBITION_LIST, timeout=5000) as pw_list:
             return pw_list.read().decode("utf-8")
-    except Exception:
+    except (error.URLError, error.HTTPError, error.ContentTooShortError):
         return None
 
 
@@ -48,6 +49,7 @@ def check_special_characters(user_pw):
 
 def is_in_prohibition_list(user_pw):
     prohibition_list = get_data_from_list()
+    print(prohibition_list)
     if prohibition_list is None:
         return False
     if user_pw in prohibition_list.split("\n"):

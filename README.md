@@ -1,6 +1,7 @@
 # Password Strength Calculator
 
 Script calculates score of the inputted password. User can't see inputted password.
+
 If password contains in [prohibition list](https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/darkweb2017-top100.txt) - returns 0.
 Repo of the lists - [here](https://github.com/danielmiessler/SecLists)
 
