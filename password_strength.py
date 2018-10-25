@@ -1,8 +1,9 @@
 import re
 from string import punctuation
-from urllib import request
-from urllib import error
+import requests
 import getpass
+import argparse
+import os
 
 '''
 List of top non-secure passwords:
@@ -12,28 +13,40 @@ Link was shortened below.
 PROHIBITION_LIST = "https://bit.ly/2AoqJzK"
 
 
-def get_data_from_list():
+def load_list_online():
     try:
-        with request.urlopen(PROHIBITION_LIST, timeout=5000) as pw_list:
-            return pw_list.read().decode("utf-8")
-    except (error.URLError, error.HTTPError, error.ContentTooShortError):
+        pw_blacklist = requests.get(PROHIBITION_LIST)
+        return pw_blacklist.content.decode("utf-8")
+    except (
+            requests.ConnectionError,
+            requests.ConnectTimeout,
+            requests.HTTPError
+    ):
         return None
 
 
-def get_password_strength(user_pw):
-    if is_in_prohibition_list(user_pw):
+def load_list_offline(filepath):
+    if os.path.isfile(filepath):
+        with open(filepath, "r", encoding="utf-8") as pw_blacklist:
+            return pw_blacklist.read()
+
+
+def get_password_strength(user_pw, forbidden_pws=None):
+    highest_score_password_length = 10
+    if is_in_prohibition_list(user_pw, forbidden_pws):
         return 0
-    current_score = set_scores_for_conditions(user_pw)
-    if len(user_pw) > 5:
+    current_score = get_scores_for_conditions(user_pw)
+    if len(user_pw) > highest_score_password_length/2:
         return current_score * 2
     return current_score
 
 
 def check_lower_and_upper_characters(user_pw):
-    if re.search(r"[a-zа-я]", user_pw) and re.search(r"[A-ZА-Я]", user_pw):
-        return True
-    else:
-        return False
+    return bool(
+        re.search(r"[a-zа-я]", user_pw)
+        and
+        re.search(r"[A-ZА-Я]", user_pw)
+    )
 
 
 def get_number_of_digits(user_pw):
@@ -41,15 +54,10 @@ def get_number_of_digits(user_pw):
 
 
 def check_special_characters(user_pw):
-    if re.search(r'[{}]'.format(punctuation), user_pw):
-        return True
-    else:
-        return False
+    return bool(re.search(r'[{}]'.format(punctuation), user_pw))
 
 
-def is_in_prohibition_list(user_pw):
-    prohibition_list = get_data_from_list()
-    print(prohibition_list)
+def is_in_prohibition_list(user_pw, prohibition_list):
     if prohibition_list is None:
         return False
     if user_pw in prohibition_list.split("\n"):
@@ -57,10 +65,12 @@ def is_in_prohibition_list(user_pw):
     return False
 
 
-def set_scores_for_conditions(user_pw):
+def get_scores_for_conditions(user_pw):
     score = 0
+    print(check_lower_and_upper_characters(user_pw))
     if check_lower_and_upper_characters(user_pw):
         score = score + 2
+    print(check_special_characters(user_pw))
     if check_special_characters(user_pw):
         score = score + 2
     if get_number_of_digits(user_pw) > 2:
@@ -68,6 +78,23 @@ def set_scores_for_conditions(user_pw):
     return score
 
 
+def get_args():
+    parser = argparse.ArgumentParser(description="Enter the path directory:")
+    parser.add_argument("-path", help="Path to file", default=None)
+    return parser.parse_args()
+
+
 if __name__ == "__main__":
     password = getpass.getpass("Input your password: ")
-    print("Your score is {}.".format(get_password_strength(password)))
+    path = get_args().path
+    if path is not None:
+        blacklist = load_list_offline(path)
+    else:
+        blacklist = load_list_online()
+    if blacklist is None:
+        print("No prohibition lists used. Your score is {}.".format(
+            get_password_strength(password)
+        ))
+    print("Your score is {}.".format(
+        get_password_strength(password, blacklist)
+    ))
