@@ -1,19 +1,11 @@
 import re
 from string import punctuation
-import requests
 import getpass
 import argparse
 import os
 
-'''
-List of top non-secure passwords:
-https://raw.githubusercontent.com/danielmiessler/SecLists/master/Passwords/darkweb2017-top100.txt
-Link was shortened below.
-'''
-PROHIBITION_LIST = "https://bit.ly/2AoqJzK"
 
-
-def load_list(filepath):
+def load_blacklist(filepath):
     if os.path.isfile(filepath):
         with open(filepath, "r", encoding="utf-8") as pw_blacklist:
             return pw_blacklist.read()
@@ -73,7 +65,7 @@ def get_args():
 if __name__ == "__main__":
     password = getpass.getpass("Input your password: ")
     path = get_args().path
-    blacklist = load_list(path)
+    blacklist = load_blacklist(path)
     if blacklist is None:
         print("No prohibition lists used. ")
     print("Your score is {}.".format(
