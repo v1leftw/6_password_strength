@@ -13,19 +13,7 @@ Link was shortened below.
 PROHIBITION_LIST = "https://bit.ly/2AoqJzK"
 
 
-def load_list_online():
-    try:
-        pw_blacklist = requests.get(PROHIBITION_LIST)
-        return pw_blacklist.content.decode("utf-8")
-    except (
-            requests.ConnectionError,
-            requests.ConnectTimeout,
-            requests.HTTPError
-    ):
-        return None
-
-
-def load_list_offline(filepath):
+def load_list(filepath):
     if os.path.isfile(filepath):
         with open(filepath, "r", encoding="utf-8") as pw_blacklist:
             return pw_blacklist.read()
@@ -67,10 +55,8 @@ def is_in_prohibition_list(user_pw, prohibition_list):
 
 def get_scores_for_conditions(user_pw):
     score = 0
-    print(check_lower_and_upper_characters(user_pw))
     if check_lower_and_upper_characters(user_pw):
         score = score + 2
-    print(check_special_characters(user_pw))
     if check_special_characters(user_pw):
         score = score + 2
     if get_number_of_digits(user_pw) > 2:
@@ -87,14 +73,9 @@ def get_args():
 if __name__ == "__main__":
     password = getpass.getpass("Input your password: ")
     path = get_args().path
-    if path is not None:
-        blacklist = load_list_offline(path)
-    else:
-        blacklist = load_list_online()
+    blacklist = load_list(path)
     if blacklist is None:
-        print("No prohibition lists used. Your score is {}.".format(
-            get_password_strength(password)
-        ))
+        print("No prohibition lists used. ")
     print("Your score is {}.".format(
         get_password_strength(password, blacklist)
     ))
