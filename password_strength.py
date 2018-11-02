@@ -5,10 +5,10 @@ import argparse
 import os
 
 
-def load_blacklist(filepath):
+def load_data_for_blacklist(filepath):
     if os.path.isfile(filepath):
-        with open(filepath, "r", encoding="utf-8") as pw_blacklist:
-            return pw_blacklist.read()
+        with open(filepath, "r", encoding="utf-8") as data_for_blacklist:
+            return data_for_blacklist.read()
 
 
 def get_password_strength(user_pw, forbidden_pws=None):
@@ -65,9 +65,9 @@ def get_args():
 if __name__ == "__main__":
     password = getpass.getpass("Input your password: ")
     path = get_args().path
-    blacklist = load_blacklist(path)
-    if blacklist is None:
+    blacklist_data = load_data_for_blacklist(path)
+    if blacklist_data is None:
         print("No prohibition lists used. ")
     print("Your score is {}.".format(
-        get_password_strength(password, blacklist)
+        get_password_strength(password, blacklist_data)
     ))
